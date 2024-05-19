@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="CustomActionBarStyle" parent="Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/Olive</item>
+        <item name="titleTextColor">@android:color/white</item> <!-- Sets title text color to white -->
+    </style>
+
+    <style name="Theme.MyMusic" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/GreenishBlue</item>        <!-- Sets the color of the action bar -->
+        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>   <!-- Apply custom ActionBar style -->
+        <item name="android:windowBackground">@color/white</item>    <!-- Sets the background color -->
+    </style>
+    <!-- Customize your theme attributes here -->
+</resources>
