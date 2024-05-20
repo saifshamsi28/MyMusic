@@ -6,6 +6,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Color;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -39,6 +40,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     private Context mContext;
     private ContentResolver mContentResolver;
     static ArrayList<MusicFiles> mFiles;
+    private boolean multiSelectModeOn = false;
 
     MusicAdapter(Context mContext, ContentResolver contentResolver, ArrayList<MusicFiles> mFiles) {
         this.mContext = mContext;
@@ -55,18 +57,40 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull MusicAdapter.MyViewHolder holder, int position) {
+        MusicFiles musicFile = mFiles.get(position);
         holder.file_name.setText(mFiles.get(position).getTitle());
 
         // Load album art in a separate thread
         new LoadAlbumArtTask(holder, position).execute();
 
+        if(musicFile.isSelected()){
+            holder.itemView.setBackgroundColor(Color.LTGRAY);
+        }
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(mContext, PlayerActivity.class);
-                intent.putExtra("Title", mFiles.get(position).getTitle());
-                intent.putExtra("Position", position);
-                mContext.startActivity(intent);
+                if (multiSelectModeOn) {
+                    toggleSelection(position);
+                } else {
+                    Intent intent = new Intent(mContext, PlayerActivity.class);
+                    intent.putExtra("Title", mFiles.get(position).getTitle());
+                    intent.putExtra("Position", position);
+                    mContext.startActivity(intent);
+                }
+            }
+        });
+
+        // Handle item long click
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (!multiSelectModeOn) {
+                    multiSelectModeOn = true;
+                    notifyDataSetChanged();
+                }
+                toggleSelection(position);
+                return true;
             }
         });
         holder.delete.setOnClickListener(new View.OnClickListener() {
@@ -86,6 +110,12 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
                 });
             }
         });
+    }
+
+    private void toggleSelection(int position) {
+        MusicFiles item = mFiles.get(position);
+        item.setSelected(!item.isSelected());
+        notifyItemChanged(position);
     }
 
     private void deleteSong(int position, View v) {

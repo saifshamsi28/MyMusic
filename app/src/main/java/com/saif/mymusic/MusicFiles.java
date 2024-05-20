@@ -5,12 +5,14 @@ public class MusicFiles {
     private String artist;
     private String duration;
     private String id;
+    private boolean isSelected;
     public MusicFiles(String path, String title, String artist, String duration,String id) {
         this.path = path;
         this.title = title;
         this.artist = artist;
         this.duration = duration;
         this.id=id;
+        this.isSelected=false;
     }
     public MusicFiles() {
     }
@@ -53,5 +55,11 @@ public class MusicFiles {
 
     public void setId(String id) {
         this.id = id;
+    }
+    public boolean isSelected() {
+        return isSelected;
+    }
+    public void setSelected(boolean selected) {
+        isSelected = selected;
     }
 }
