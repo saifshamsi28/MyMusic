@@ -11,25 +11,17 @@
         android:id="@+id/music_img"
         android:padding="5dp" />
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="File name"
         android:textSize="20dp"
         android:singleLine="true"
-        android:layout_toStartOf="@id/delete_option"
+        android:marqueeRepeatLimit="marquee_forever"
         android:layout_toEndOf="@id/music_img"
         android:layout_marginStart="15dp"
         android:layout_centerVertical="true"
         android:textColor="@color/white"
         android:id="@+id/music_file_name"
-        />
-    <ImageView
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@drawable/noun_dots_786830"
-        android:id="@+id/delete_option"
-        android:padding="5dp"
-        android:layout_alignParentEnd="true"
         />
 
 

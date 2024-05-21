@@ -9,5 +9,8 @@
         <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>   <!-- Apply custom ActionBar style -->
         <item name="android:windowBackground">@color/white</item>    <!-- Sets the background color -->
     </style>
-    <!-- Customize your theme attributes here -->
+    <style name="CustomActionModeStyle" parent="@style/Widget.AppCompat.ActionMode">
+        <item name="android:background">@color/GreenishBlue</item>
+    </style>
+
 </resources>

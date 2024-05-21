@@ -13,40 +13,40 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
-import com.saif.mymusic.MusicFiles;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder> {
     private Context mContext;
     private ContentResolver mContentResolver;
     static ArrayList<MusicFiles> mFiles;
     private boolean multiSelectModeOn = false;
+    private List<LoadAlbumArtTask> taskList = new ArrayList<>();
 
     MusicAdapter(Context mContext, ContentResolver contentResolver, ArrayList<MusicFiles> mFiles) {
         this.mContext = mContext;
         this.mContentResolver = contentResolver;
         this.mFiles = mFiles;
     }
+
 
     @NonNull
     @Override
@@ -59,56 +59,38 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     public void onBindViewHolder(@NonNull MusicAdapter.MyViewHolder holder, int position) {
         MusicFiles musicFile = mFiles.get(position);
         holder.file_name.setText(mFiles.get(position).getTitle());
+        //these 3 lines ,to set the moving text for BOOK Title
+        holder.file_name.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+        holder.file_name.setSingleLine(true);
+        holder.file_name.setSelected(true);
 
-        // Load album art in a separate thread
+        // this will Load album art in a separate thread
         new LoadAlbumArtTask(holder, position).execute();
 
-        if(musicFile.isSelected()){
+        if (musicFile.isSelected()) {
             holder.itemView.setBackgroundColor(Color.LTGRAY);
+        } else {
+            holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.Teal));
         }
 
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (multiSelectModeOn) {
-                    toggleSelection(position);
-                } else {
-                    Intent intent = new Intent(mContext, PlayerActivity.class);
-                    intent.putExtra("Title", mFiles.get(position).getTitle());
-                    intent.putExtra("Position", position);
-                    mContext.startActivity(intent);
-                }
+        holder.itemView.setOnClickListener(v -> {
+            if (multiSelectModeOn) {
+                toggleSelection(position);
+            } else {
+                Intent intent = new Intent(mContext, PlayerActivity.class);
+                intent.putExtra("Title", mFiles.get(position).getTitle());
+                intent.putExtra("Position", position);
+                mContext.startActivity(intent);
             }
         });
 
-        // Handle item long click
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (!multiSelectModeOn) {
-                    multiSelectModeOn = true;
-                    notifyDataSetChanged();
-                }
-                toggleSelection(position);
-                return true;
+        holder.itemView.setOnLongClickListener(v -> {
+            if (!multiSelectModeOn) {
+                multiSelectModeOn = true;
+                ((MainActivity) mContext).startActionMode(((MainActivity) mContext).getActionModeCallback());
             }
-        });
-        holder.delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                PopupMenu popupMenu = new PopupMenu(mContext, v);
-                popupMenu.getMenuInflater().inflate(R.menu.delete_items, popupMenu.getMenu());
-                popupMenu.show();
-                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        if (R.id.delete == item.getItemId()) {
-                            deleteSong(position, v);
-                        }
-                        return true;
-                    }
-                });
-            }
+            toggleSelection(position);
+            return true;
         });
     }
 
@@ -118,38 +100,66 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         notifyItemChanged(position);
     }
 
-    private void deleteSong(int position, View v) {
-        String externalStorageState = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(externalStorageState)) {
-            Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    Long.parseLong(mFiles.get(position).getId()));
+    public void exitMultiSelectMode() {
+        multiSelectModeOn = false;
+        for (MusicFiles musicFile : mFiles) {
+            musicFile.setSelected(false);
+        }
+        notifyDataSetChanged();
+    }
 
-            // Use SAF for API Level 30+
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Collection<Uri> urisToDelete = Collections.singletonList(contentUri);
-                PendingIntent deleteRequest = MediaStore.createDeleteRequest(mContentResolver, urisToDelete);
+    public void deleteSongs(List<MusicFiles> selectedSongs, View v) {
+        List<Integer> positions = new ArrayList<>();
+        List<Uri> urisToDelete = new ArrayList<>();
 
-                try {
-                    // Start IntentSenderForResult to prompt the user
-                    ((MainActivity) mContext).startIntentSenderForResult(deleteRequest.getIntentSender(), 1000, null, 0, 0, 0, null);
-                } catch (IntentSender.SendIntentException e) {
-                    e.printStackTrace();
+        for (MusicFiles musicFile : selectedSongs) {
+            int position = mFiles.indexOf(musicFile);
+            if (position != -1) {
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, Long.parseLong(musicFile.getId()));
+                urisToDelete.add(contentUri);
+                positions.add(position);
+            }
+        }
+
+        if (!urisToDelete.isEmpty()) {
+            // Cancel ongoing tasks(which is performing on thread)  to avoid app crash
+            for (LoadAlbumArtTask task : taskList) {
+                task.cancel(true);
+            }
+            taskList.clear();
+
+            String externalStorageState = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(externalStorageState)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    PendingIntent deleteRequest = MediaStore.createDeleteRequest(mContentResolver, urisToDelete);
+                    try {
+                        ((MainActivity) mContext).startIntentSenderForResult(deleteRequest.getIntentSender(), 1000, null, 0, 0, 0, null);
+                    } catch (IntentSender.SendIntentException e) {
+                        e.printStackTrace();
+                    }
+                    for (Uri uri : urisToDelete) {
+                        int position = positions.get(urisToDelete.indexOf(uri));
+                        deleteSongFile(position, v, uri);
+                    }
+//                    Toast.makeText(mContext, selectedSongs.size()+" songs deleted successfully", Toast.LENGTH_SHORT).show();
                 }
             } else {
-                // For API Level < 30, fallback to the existing deletion method
-                deleteSongFile(position, v, contentUri);
+                Log.e(this.toString(), "External storage is not writable.");
             }
-            deleteSongFile(position, v, contentUri);
-        } else {
-            Log.e(this.toString(), "External storage is not writable.");
-            // Handle the case where external storage is not available
         }
     }
+
     private void deleteSongFile(int position, View v, Uri contentUri) {
+        try {
             mFiles.remove(position);
             notifyItemRemoved(position);
             notifyItemRangeChanged(position, mFiles.size());
-            Snackbar.make(v, "Song deleted : ", Snackbar.LENGTH_LONG).show();
+//            Toast.makeText(mContext, " songs deleted successfully", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Snackbar.make(v, "Failed to delete song", Snackbar.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -159,12 +169,12 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         TextView file_name;
-        ImageView album_art, delete;
+        ImageView album_art;
+
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             file_name = itemView.findViewById(R.id.music_file_name);
             album_art = itemView.findViewById(R.id.music_img);
-            delete = itemView.findViewById(R.id.delete_option);
         }
     }
 
@@ -181,7 +191,12 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         @Override
         protected byte[] doInBackground(Void... voids) {
             try {
-                return getAlbumArt(mFiles.get(position).getPath());
+                File file = new File(mFiles.get(position).getPath());
+                if (file.exists()) {
+                    return getAlbumArt(mFiles.get(position).getPath());
+                } else {
+                    return null;
+                }
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;

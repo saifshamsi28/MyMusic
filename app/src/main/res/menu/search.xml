@@ -27,4 +27,17 @@
                 app:showAsAction="never"/>
         </menu>
     </item>
+    <!-- Add Share and Delete items -->
+    <item
+        android:id="@+id/action_share"
+        android:title="Share"
+        android:icon="@drawable/share_song"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
+    <item
+        android:id="@+id/action_delete"
+        android:title="Delete"
+        android:icon="@drawable/delete_forever"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
 </menu>

@@ -1,17 +1,24 @@
 package com.saif.mymusic;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -19,19 +26,68 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
-import com.saif.mymusic.R;
+import java.util.Objects;
+
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final int REQUEST_CODE = 1;
     static ArrayList<MusicFiles> musicFiles;
     RecyclerView recyclerView;
+    TextView noOfSongs;
      static MusicAdapter musicAdapter;
     static boolean shuffleButton=false,loopOneButton=false;
     private final String MY_SORT_PREF="SortOrder";
+    private ActionMode actionMode;
+    private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            mode.getMenuInflater().inflate(R.menu.search, menu);
+            return true;
+        }
+
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            menu.findItem(R.id.action_delete).setVisible(true);
+            menu.findItem(R.id.action_share).setVisible(true);
+            menu.findItem(R.id.sort_button).setVisible(false);
+            menu.findItem(R.id.search_bar).setVisible(false);
+            return true;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                if( R.id.action_delete == item.getItemId()) {
+                    deleteSelectedItems();
+                    mode.finish();
+                    return true;
+                }
+                else if( R.id.action_share == item.getItemId()) {
+                    shareSelectedItems();
+                    mode.finish();
+                    return true;
+                }else
+                    return false;
+            }
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            musicAdapter.exitMultiSelectMode();
+            actionMode = null;
+            Menu menu = mode.getMenu();
+            menu.findItem(R.id.action_share).setVisible(false);
+            menu.findItem(R.id.action_delete).setVisible(false);
+            menu.findItem(R.id.sort_button).setVisible(true);
+            menu.findItem(R.id.search_bar).setVisible(true);
+        }
+    };
+    public ActionMode.Callback getActionModeCallback(){
+        return actionModeCallback;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView=findViewById(R.id.music_list);
+        noOfSongs=findViewById(R.id.song_number);
             requestStoragePermission();
             if(!(musicFiles.size() <1)) {
                 ContentResolver contentResolver = getContentResolver();
@@ -42,6 +98,67 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             }
     }
 
+    private void deleteSelectedItems() {
+        ArrayList<MusicFiles> selectedItems = new ArrayList<>();
+        for (MusicFiles musicFile : musicFiles) {
+            if (musicFile.isSelected()) {
+                selectedItems.add(musicFile);
+            }
+        }
+
+        if (selectedItems.isEmpty()) {
+            Toast.makeText(this, "No items selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+                View view = recyclerView.getChildAt(0);
+                musicAdapter.deleteSongs(selectedItems, view);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1000) {
+            if (resultCode == RESULT_OK) {
+                // Permission granted, delete the files
+                ArrayList<MusicFiles> deletedFiles = new ArrayList<>();
+                for (MusicFiles musicFile : musicAdapter.mFiles) {
+                    if (musicFile.isSelected()) {
+                        deletedFiles.add(musicFile);
+                    }
+                }
+                int numDeleted = deletedFiles.size();
+                for (MusicFiles musicFile : deletedFiles) {
+                    musicAdapter.mFiles.remove(musicFile);
+                }
+                musicAdapter.notifyDataSetChanged();
+
+                Toast.makeText(this, "song deleted successfully", Toast.LENGTH_SHORT).show();
+            } else {
+                // Permission denied, handle accordingly
+                Toast.makeText(this, "Permission denied to delete files", Toast.LENGTH_SHORT).show();
+            }
+        }
+        noOfSongs.setText(String.valueOf(musicFiles.size()));
+    }
+
+
+
+    private void shareSelectedItems() {
+        ArrayList<MusicFiles> selectedItems = new ArrayList<>();
+        for (MusicFiles musicFile : musicFiles) {
+            if (musicFile.isSelected()) {
+                selectedItems.add(musicFile);
+            }
+        }
+        Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+        shareIntent.setType("audio/*");
+        ArrayList<Uri> uris = new ArrayList<>();
+        for (MusicFiles musicFile : selectedItems) {
+            uris.add(Uri.parse(musicFile.getPath()));
+        }
+        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        startActivity(Intent.createChooser(shareIntent, "Share music files"));
+    }
     private void requestStoragePermission() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
                 PackageManager.PERMISSION_GRANTED) {
@@ -59,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
                 musicFiles=getAllAudio(this);
+                noOfSongs.setText(musicFiles.size());
             } else {
                 Toast.makeText(this, "Storage permission is required", Toast.LENGTH_SHORT).show();
             }
@@ -103,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             }
                 cursor.close();
             }
+        noOfSongs.setText(String.valueOf(tempAudioList.size()));
         return tempAudioList;
     }
 
@@ -151,5 +270,23 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
              this.recreate();
          }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        if (actionMode != null) {
+            actionMode.finish();
+            return true;
+        }
+        return super.onSupportNavigateUp();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (actionMode != null) {
+            actionMode.finish();
+        } else {
+            super.onBackPressed();
+        }
     }
 }
