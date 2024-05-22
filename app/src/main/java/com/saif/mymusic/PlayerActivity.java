@@ -1,7 +1,6 @@
 package com.saif.mymusic;
 
 import static com.saif.mymusic.MainActivity.loopOneButton;
-import static com.saif.mymusic.MainActivity.musicFiles;
 import static com.saif.mymusic.MainActivity.shuffleButton;
 import static com.saif.mymusic.MusicAdapter.mFiles;
 
@@ -27,7 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.color.utilities.TonalPalette;
 
 import java.util.ArrayList;
 import java.util.Random;
