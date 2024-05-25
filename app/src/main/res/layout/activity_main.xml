@@ -15,18 +15,20 @@
             android:id="@+id/song_number"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="200"
+            android:text="00"
             android:gravity="end"
             android:layout_weight="1"
             android:textSize="20dp"
             android:textStyle="bold"/>
         <TextView
+            android:id="@+id/songs_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:layout_marginStart="5dp"
             android:layout_weight="1"
             android:text="songs"
+            android:visibility="invisible"
             android:textSize="25dp"/>
     </LinearLayout>
     <androidx.recyclerview.widget.RecyclerView

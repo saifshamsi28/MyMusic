@@ -1,13 +1,20 @@
 package com.saif.mymusic;
+
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,19 +23,21 @@ import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public static final int REQUEST_CODE = 1;
     static ArrayList<MusicFiles> musicFiles;
     RecyclerView recyclerView;
-    TextView noOfSongs;
+    TextView noOfSongs, song_postfix;
     static MusicAdapter musicAdapter;
     static boolean shuffleButton = false, loopOneButton = false;
     private final String MY_SORT_PREF = "SortOrder";
@@ -85,8 +94,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         setContentView(R.layout.activity_main);
         recyclerView = findViewById(R.id.music_list);
         noOfSongs = findViewById(R.id.song_number);
+        song_postfix = findViewById(R.id.songs_header);
         musicFiles = new ArrayList<>();
-        requestStoragePermission();
+        requestPermissions();
     }
 
     private void deleteSelectedItems() {
@@ -108,24 +118,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1000) {
-            if (resultCode == RESULT_OK) {
-                ArrayList<MusicFiles> deletedFiles = new ArrayList<>();
-                for (MusicFiles musicFile : musicAdapter.mFiles) {
-                    if (musicFile.isSelected()) {
-                        deletedFiles.add(musicFile);
-                    }
-                }
-                for (MusicFiles musicFile : deletedFiles) {
-                    musicAdapter.mFiles.remove(musicFile);
-                }
-                musicAdapter.notifyDataSetChanged();
-                Toast.makeText(this, "song deleted successfully", Toast.LENGTH_SHORT).show();
+        if (requestCode == REQUEST_CODE && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                setupMusicFiles();
             } else {
-                Toast.makeText(this, "Permission denied to delete files", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
-        noOfSongs.setText(String.valueOf(musicFiles.size()));
     }
 
     private void shareSelectedItems() {
@@ -145,15 +144,29 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         startActivity(Intent.createChooser(shareIntent, "Share music files"));
     }
 
-    private void requestStoragePermission() {
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE);
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivityForResult(intent, REQUEST_CODE);
+            } else {
+                setupMusicFiles();
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE);
+            } else {
+                setupMusicFiles();
+            }
         } else {
-            musicFiles = getAllAudio(this);
-            setupRecyclerView();
+            setupMusicFiles();
         }
+    }
+
+    private void setupMusicFiles() {
+        musicFiles = getAllAudio(this);
+        scanMedia("/storage/emulated/0/Download");
+        setupRecyclerView();
     }
 
     private void setupRecyclerView() {
@@ -164,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this, LinearLayoutManager.VERTICAL, false));
             recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
             noOfSongs.setText(String.valueOf(musicFiles.size()));
+            song_postfix.setVisibility(View.VISIBLE);
         } else {
             noOfSongs.setText("No music files found");
         }
@@ -174,11 +188,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show();
-                musicFiles = getAllAudio(this);
-                setupRecyclerView();
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+                setupMusicFiles();
             } else {
-                Toast.makeText(this, "Storage permission is required", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -207,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.DATA,
                 MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ALBUM,
                 MediaStore.Audio.Media._ID
         };
         Cursor cursor = context.getContentResolver().query(uri, projection, null, null, order);
@@ -216,12 +230,16 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 String duration = cursor.getString(1);
                 String path = cursor.getString(2);
                 String artist = cursor.getString(3);
-                String id = cursor.getString(4);
-                MusicFiles musicFiles = new MusicFiles(path, title, artist, duration, id);
-                if (!musicFiles.getTitle().startsWith("PTT-") && !musicFiles.getTitle().startsWith("AUD-"))
-                    tempAudioList.add(musicFiles);
+                String album = cursor.getString(4);
+                String id = cursor.getString(5);
+
+                MusicFiles musicFile = new MusicFiles(path, title, artist, duration, id);
+                Log.d("MusicFiles", "Found music file: " + title + " at " + path); // Add this line
+                tempAudioList.add(musicFile);
             }
             cursor.close();
+        } else {
+            Log.d("MusicFiles", "Cursor is null, no music files found");
         }
         return tempAudioList;
     }
@@ -229,27 +247,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.search, menu);
-        MenuItem menuItem = menu.findItem(R.id.search_bar);
-        SearchView searchView = (SearchView) menuItem.getActionView();
+        MenuItem searchItem = menu.findItem(R.id.search_bar);
+        SearchView searchView = (SearchView) searchItem.getActionView();
         searchView.setOnQueryTextListener(this);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        return false;
-    }
-
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        String userInput = newText.toLowerCase();
-        ArrayList<MusicFiles> myFiles = new ArrayList<>();
-        for (MusicFiles song : musicFiles) {
-            if (song.getTitle().toLowerCase().contains(userInput)) {
-                myFiles.add(song);
-            }
-        }
-        musicAdapter.updateSongList(myFiles);
         return true;
     }
 
@@ -273,20 +273,30 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     @Override
-    public boolean onSupportNavigateUp() {
-        if (actionMode != null) {
-            actionMode.finish();
-            return true;
-        }
-        return super.onSupportNavigateUp();
+    public boolean onQueryTextSubmit(String query) {
+        return false;
     }
 
     @Override
-    public void onBackPressed() {
-        if (actionMode != null) {
-            actionMode.finish();
-        } else {
-            super.onBackPressed();
+    public boolean onQueryTextChange(String newText) {
+        String userInput = newText.toLowerCase();
+        ArrayList<MusicFiles> filteredFiles = new ArrayList<>();
+
+        for (MusicFiles song : musicFiles) {
+            if (song.getTitle().toLowerCase().contains(userInput)) {
+                filteredFiles.add(song);
+            }
         }
+
+        MusicAdapter newAdapter = new MusicAdapter(MainActivity.this, getContentResolver(), filteredFiles);
+        recyclerView.setAdapter(newAdapter);
+        return true;
+    }
+
+    private void scanMedia(String path) {
+        MediaScannerConnection.scanFile(this, new String[]{path}, null, (scannedPath, uri) -> {
+            Log.d("MediaScanner", "Scanned " + scannedPath + ":");
+            Log.d("MediaScanner", "-> uri=" + uri);
+        });
     }
 }

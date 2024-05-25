@@ -1,5 +1,4 @@
 package com.saif.mymusic;
-
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -20,14 +19,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
 import com.google.android.material.snackbar.Snackbar;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,7 +59,9 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         holder.file_name.setSelected(true);
 
         // this will Load album art in a separate thread
-        new LoadAlbumArtTask(holder, position).execute();
+        LoadAlbumArtTask task = new LoadAlbumArtTask(holder, position);
+        taskList.add(task);
+        task.execute();
 
         if (musicFile.isSelected()) {
             holder.itemView.setBackgroundColor(Color.LTGRAY);
@@ -219,14 +217,27 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     // To set album art of the songs
     private static byte[] getAlbumArt(String uri) throws IOException {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(uri);
-        return retriever.getEmbeddedPicture();
+        try {
+            retriever.setDataSource(uri);
+            return retriever.getEmbeddedPicture();
+        } catch (IllegalArgumentException e) {
+            Log            .e("MusicAdapter", "Failed to set data source for MediaMetadataRetriever: " + e.getMessage());
+            retriever.release();
+            return null;
+        } catch (RuntimeException e) {
+            Log.e("MusicAdapter", "Runtime exception in MediaMetadataRetriever: " + e.getMessage());
+            retriever.release();
+            return null;
+        } finally {
+            retriever.release();
+        }
     }
 
     // This method is called when searching is performed
     void updateSongList(ArrayList<MusicFiles> filteredMusicFiles) {
-        mFiles = new ArrayList<>();
+        mFiles.clear();
         mFiles.addAll(filteredMusicFiles);
         notifyDataSetChanged();
     }
 }
+
