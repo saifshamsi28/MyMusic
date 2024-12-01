@@ -10,7 +10,7 @@ This is a simple music player app build using JAVA. Below are some snapshots of 
     </td>
     <td align="center">
       <b>Searching Songs</b>
-      <img src="https://github.com/user-attachments/assets/link_to_searching_song_image" width="300" height="500"/><br>
+      <img src="https://github.com/user-attachments/assets/d388c67a-b1e3-4519-a921-b060b18b235e" width="300" height="500"/><br>
     </td>
     <td align="center">
       <b>Playing Music Without Album Art</b>
@@ -32,3 +32,4 @@ This is a simple music player app build using JAVA. Below are some snapshots of 
     </td>
   </tr>
 </table>
+![IMG-20241201-WA0011]()
