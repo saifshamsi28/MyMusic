@@ -4,11 +4,11 @@ This is a simple music player app built using JAVA. Below are some snapshots of 
 
 <table>
   <tr>
-    <td align="start">
+    <td align="center">
       <b>Home Screen</b>
       <img src="https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6" width="100" height="200"/>
     </td>
-    <td align="start">
+    <td align="center">
       <b>Searching Songs</b>
       <img src="https://github.com/user-attachments/assets/d388c67a-b1e3-4519-a921-b060b18b235e" width="100" height="200"/>
     </td>
