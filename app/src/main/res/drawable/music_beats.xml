@@ -1,0 +1,9 @@
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android" android:oneshot="false">
+    <item android:drawable="@drawable/beat1" android:duration="500"
+        android:background="@color/Teal" />
+    <item android:drawable="@drawable/beat2" android:duration="500"
+        android:background="@color/Teal"/>
+    <item android:drawable="@drawable/beat3" android:duration="500"
+        android:background="@color/Teal"/>
+    <!-- Add more frames as needed -->
+</animation-list>

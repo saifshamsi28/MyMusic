@@ -1,5 +1,13 @@
 package com.saif.mymusic;
 
+import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_ARTIST;
+import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_NAME;
+import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_PATH;
+import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_POSITION;
+import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_PROGRESS;
+import static com.saif.mymusic.MusicService.LAST_PLAYED_MUSIC;
+import static com.saif.mymusic.MyMusicPlayerPermissions.REQUEST_MEDIA_PERMISSION;
+
 import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -7,7 +15,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +26,7 @@ import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,7 +34,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,20 +44,34 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     public static final int REQUEST_CODE = 1;
     static ArrayList<MusicFiles> musicFiles;
     RecyclerView recyclerView;
-    TextView noOfSongs, song_postfix;
-    static MusicAdapter musicAdapter;
+    TextView noOfSongs;
+    TextView song_postfix;
+    TextView miniPlayerSongName;
+    MusicAdapter musicAdapter;
     static boolean shuffleButton = false, loopOneButton = false;
     private final String MY_SORT_PREF = "SortOrder";
     private ActionMode actionMode;
+    FrameLayout miniPlayer;
+    public static int currentPlayingPosition = -1;
+    private MyMusicPlayerPermissions myMusicPlayerPermissions;
+    public static boolean SHOW_MINI_PLAYER = false;
+    public static String PATH_TO_MINI_PLAYER = null;
+    public static String LAST_MUSIC_NAME = null;
+    public static String LAST_MUSIC_ARTIST = null;
+    public static int LAST_MUSIC_POSITION = 0;
+    public static int LAST_MUSIC_PROGRESS = 0;
     private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            actionMode=mode;
             mode.getMenuInflater().inflate(R.menu.search, menu);
             return true;
         }
 
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            menu.findItem(R.id.action_select_all).setVisible(true);
             menu.findItem(R.id.action_delete).setVisible(true);
             menu.findItem(R.id.action_share).setVisible(true);
             menu.findItem(R.id.sort_button).setVisible(false);
@@ -68,8 +89,12 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 shareSelectedItems();
                 mode.finish();
                 return true;
-            } else
+            } else if (R.id.action_select_all == item.getItemId()) {
+                musicAdapter.selectAll();
+                return true;
+            } else {
                 return false;
+            }
         }
 
         @Override
@@ -79,11 +104,24 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             Menu menu = mode.getMenu();
             menu.findItem(R.id.action_share).setVisible(false);
             menu.findItem(R.id.action_delete).setVisible(false);
+            menu.findItem(R.id.action_select_all).setVisible(false);
             menu.findItem(R.id.sort_button).setVisible(true);
             menu.findItem(R.id.search_bar).setVisible(true);
         }
     };
-
+    public void updateActionModeTitle() {
+        if (actionMode != null) {
+            int selectedCount = musicAdapter.getSelectedItemCount();
+            if(selectedCount==0){
+                actionMode.finish();
+                actionMode=null;
+            }else {
+                actionMode.setTitle(selectedCount + " selected");
+            }
+        }else {
+            Toast.makeText(this, " action mode null", Toast.LENGTH_SHORT).show();
+        }
+    }
     public ActionMode.Callback getActionModeCallback() {
         return actionModeCallback;
     }
@@ -95,6 +133,16 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         recyclerView = findViewById(R.id.music_list);
         noOfSongs = findViewById(R.id.song_number);
         song_postfix = findViewById(R.id.songs_header);
+        miniPlayerSongName = findViewById(R.id.mini_player_song_name);
+        myMusicPlayerPermissions=new MyMusicPlayerPermissions();
+        miniPlayer = findViewById(R.id.mini_player_container);
+        if (getSupportFragmentManager().findFragmentById(R.id.mini_player_container) == null) {
+            MiniPlayerFragment miniPlayerFragment = new MiniPlayerFragment();
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.mini_player_container, miniPlayerFragment)
+                    .commit();
+        }
+
         musicFiles = new ArrayList<>();
         requestPermissions();
     }
@@ -145,29 +193,21 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-                startActivityForResult(intent, REQUEST_CODE);
-            } else {
-                setupMusicFiles();
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE);
-            } else {
-                setupMusicFiles();
-            }
-        } else {
+        if(myMusicPlayerPermissions.isMediaOk(this)){
             setupMusicFiles();
+        }else {
+            if (!myMusicPlayerPermissions.isMediaOk(this)) {
+                myMusicPlayerPermissions.requestMediaPermission(this);
+            }
         }
     }
 
     private void setupMusicFiles() {
         musicFiles = getAllAudio(this);
-        scanMedia("/storage/emulated/0/Download");
+//        scanMedia("/storage/emulated/0/Download");
         setupRecyclerView();
     }
+
 
     private void setupRecyclerView() {
         if (musicFiles != null && !musicFiles.isEmpty()) {
@@ -180,19 +220,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             song_postfix.setVisibility(View.VISIBLE);
         } else {
             noOfSongs.setText("No music files found");
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-                setupMusicFiles();
-            } else {
-                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -221,7 +248,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 MediaStore.Audio.Media.DATA,
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media._ID
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.SIZE
         };
         Cursor cursor = context.getContentResolver().query(uri, projection, null, null, order);
         if (cursor != null) {
@@ -232,9 +260,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 String artist = cursor.getString(3);
                 String album = cursor.getString(4);
                 String id = cursor.getString(5);
+                long size = cursor.getLong(6);
 
-                MusicFiles musicFile = new MusicFiles(path, title, artist, duration, id);
-                Log.d("MusicFiles", "Found music file: " + title + " at " + path); // Add this line
+                MusicFiles musicFile = new MusicFiles(path, title, artist, duration, id,size,false);
+//                Log.d("MusicFiles", "Found music file: " + title + " at " + path); // Add this line
                 tempAudioList.add(musicFile);
             }
             cursor.close();
@@ -249,7 +278,9 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         getMenuInflater().inflate(R.menu.search, menu);
         MenuItem searchItem = menu.findItem(R.id.search_bar);
         SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setOnQueryTextListener(this);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(this);
+        }
         return true;
     }
 
@@ -293,10 +324,58 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         return true;
     }
 
-    private void scanMedia(String path) {
-        MediaScannerConnection.scanFile(this, new String[]{path}, null, (scannedPath, uri) -> {
-            Log.d("MediaScanner", "Scanned " + scannedPath + ":");
-            Log.d("MediaScanner", "-> uri=" + uri);
-        });
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_MEDIA_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                setupMusicFiles();
+            } else {
+                // Permission denied
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE) &&
+                        !ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // User has denied the permission and selected "Don't ask again"
+                    showPermissionDeniedDialog();
+                }
+            }
+        }
+    }
+
+    private void showPermissionDeniedDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permission Required")
+                .setMessage("Storage permissions are required to access music files. Please enable them in app settings.")
+                .setPositiveButton("Go to Settings", (dialog, which) -> {
+                    // Open app settings
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences preferences=getSharedPreferences(LAST_PLAYED_MUSIC,MODE_PRIVATE);
+        String lastPlayedSong=preferences.getString(LAST_MUSIC_FILE_PATH,null);
+        LAST_MUSIC_NAME=preferences.getString(LAST_MUSIC_FILE_NAME,null);
+        LAST_MUSIC_ARTIST=preferences.getString(LAST_MUSIC_FILE_ARTIST,null);
+        LAST_MUSIC_POSITION= preferences.getInt(LAST_MUSIC_FILE_POSITION,0);
+        LAST_MUSIC_PROGRESS= preferences.getInt(LAST_MUSIC_FILE_PROGRESS,0);
+        Log.e("MainActivity", "onResume:song stored in preference: "+LAST_MUSIC_NAME);
+        Log.e("MainActivity", "onResume:song position in preference: "+LAST_MUSIC_POSITION);
+        Log.e("MainActivity", "onResume:song progress stored in preference: "+LAST_MUSIC_PROGRESS);
+        if(lastPlayedSong!=null){
+            SHOW_MINI_PLAYER=true;
+            PATH_TO_MINI_PLAYER=lastPlayedSong;
+        }else {
+            SHOW_MINI_PLAYER=false;
+            PATH_TO_MINI_PLAYER=null;
+        }
+        Log.e("MainActivity","onResume: lastSongPath is: "+lastPlayedSong+" mini player is: "+SHOW_MINI_PLAYER);
     }
 }

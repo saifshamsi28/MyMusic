@@ -1,28 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/audio_items"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#111"
-    android:id="@+id/audio_items">
+    android:background="#111">
+
     <ImageView
+        android:id="@+id/music_img"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:padding="5dp"
         android:src="@mipmap/ic_launcher"
-        android:id="@+id/music_img"
-        android:padding="5dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5" />
+
     <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="File name"
-        android:textSize="20dp"
-        android:singleLine="true"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:layout_toEndOf="@id/music_img"
-        android:layout_marginStart="15dp"
-        android:layout_centerVertical="true"
-        android:textColor="@color/white"
         android:id="@+id/music_file_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:maxLines="1"
+        android:text="File name faef fwe wf feffaeaefaedwf ffefge"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/music_file_size"
+        app:layout_constraintStart_toEndOf="@+id/music_img"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <TextView
+        android:id="@+id/music_file_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="8dp"
+        android:padding="8dp"
+        android:paddingEnd="5dp"
+        android:text="2.4mb"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <com.chibde.visualizer.BarVisualizer
+        android:id="@+id/visualizer"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="8dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:background="@color/Teal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5"
         />
 
-
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

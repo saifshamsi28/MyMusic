@@ -12,17 +12,18 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import com.chibde.visualizer.BarVisualizer;
 import com.google.android.material.snackbar.Snackbar;
 import java.io.File;
 import java.io.IOException;
@@ -30,11 +31,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder> {
-    private Context mContext;
+    private final Context mContext;
     private ContentResolver mContentResolver;
     static ArrayList<MusicFiles> mFiles;
     private boolean multiSelectModeOn = false;
+    private ArrayList<MusicFiles> selectedItems = new ArrayList<>();
     private List<LoadAlbumArtTask> taskList = new ArrayList<>();
+//    static AnimationDrawable animation;
+    public int playingPosition=-1;
 
     MusicAdapter(Context mContext, ContentResolver contentResolver, ArrayList<MusicFiles> mFiles) {
         this.mContext = mContext;
@@ -53,32 +57,56 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     public void onBindViewHolder(@NonNull MusicAdapter.MyViewHolder holder, int position) {
         MusicFiles musicFile = mFiles.get(position);
         holder.file_name.setText(mFiles.get(position).getTitle());
+        holder.file_size.setText(formatMusicFileSize(mFiles.get(position).getSize()));
         //these 3 lines ,to set the moving text for BOOK Title
-        holder.file_name.setEllipsize(TextUtils.TruncateAt.MARQUEE);
+//        holder.file_name.setEllipsize(TextUtils.TruncateAt.MARQUEE);
         holder.file_name.setSingleLine(true);
-        holder.file_name.setSelected(true);
+//        holder.file_name.setSelected(true);
 
         // this will Load album art in a separate thread
         LoadAlbumArtTask task = new LoadAlbumArtTask(holder, position);
         taskList.add(task);
         task.execute();
 
+        musicFile.setPlaying(false);
+
         if (musicFile.isSelected()) {
             holder.itemView.setBackgroundColor(Color.LTGRAY);
         } else {
             holder.itemView.setBackgroundColor(ContextCompat.getColor(mContext, R.color.Teal));
+        }
+//        animation = (AnimationDrawable) holder.music_beats.getDrawable();
+        if (musicFile.isPlaying()) {
+            holder.file_size.setVisibility(View.GONE);
+            holder.visualizer.setVisibility(View.VISIBLE);
+            holder.visualizer.setPlayer(PlayerActivity.getInstance().audioSessionId);
+            holder.visualizer.setDensity(70);
+            Log.e("MusicAdapter","visualizer set for: "+musicFile.getTitle());
+//            animation.start();
+        } else {
+            holder.file_size.setVisibility(View.VISIBLE);
+            holder.file_size.setText(formatMusicFileSize(mFiles.get(position).getSize()));
+            holder.visualizer.setVisibility(View.GONE);
         }
 
         holder.itemView.setOnClickListener(v -> {
             if (multiSelectModeOn) {
                 toggleSelection(position);
             } else {
-                Intent intent = new Intent(mContext, PlayerActivity.class);
-                intent.putExtra("Title", mFiles.get(position).getTitle());
-                intent.putExtra("Position", position);
-                mContext.startActivity(intent);
+                if (position != -1) {
+                    mFiles.get(position).setPlaying(false);
+                }
+                MainActivity.currentPlayingPosition = position;
+                playingPosition = position;
+                notifyItemChanged(position);
+
+                Intent activityIntent = new Intent(mContext, PlayerActivity.class);
+                activityIntent.putExtra("Position", position);
+                activityIntent.putExtra("fromNotification", false);
+                mContext.startActivity(activityIntent);
             }
         });
+
 
         holder.itemView.setOnLongClickListener(v -> {
             if (!multiSelectModeOn) {
@@ -90,10 +118,32 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         });
     }
 
+    public String formatMusicFileSize(long sizeInBytes) {
+        final long KILOBYTE = 1024;
+        final long MEGABYTE = KILOBYTE * 1024;
+
+        if (sizeInBytes >= MEGABYTE) {
+            double sizeInMb = (double) sizeInBytes / MEGABYTE;
+            return String.format("%.2f MB", sizeInMb);
+        } else {
+            double sizeInKb = (double) sizeInBytes / KILOBYTE;
+            return String.format("%.2f KB", sizeInKb);
+        }
+    }
+
+
     private void toggleSelection(int position) {
         MusicFiles item = mFiles.get(position);
         item.setSelected(!item.isSelected());
+        if (item.isSelected()) {
+            selectedItems.add(item);
+        } else {
+            selectedItems.remove(item);
+        }
         notifyItemChanged(position);
+//        Toast.makeText(mContext, "selected "+selectedItems.size(), Toast.LENGTH_SHORT).show();
+        ((MainActivity) mContext).updateActionModeTitle();
+//        ((MainActivity) mContext).actionMode.setTitle(selectedItems.size() + " selected");
     }
 
     public void exitMultiSelectMode() {
@@ -102,6 +152,26 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
             musicFile.setSelected(false);
         }
         notifyDataSetChanged();
+    }
+    int getSelectedItemCount() {
+        return selectedItems.size();
+    }
+
+    public void selectAll() {
+        if (selectedItems.size() != mFiles.size()) {
+            selectedItems.clear();
+            for (MusicFiles musicFile : mFiles) {
+                musicFile.setSelected(true);
+                selectedItems.add(musicFile);
+            }
+        } else {
+            for (MusicFiles musicFile : mFiles) {
+                musicFile.setSelected(false);
+            }
+            selectedItems.clear();
+        }
+        notifyDataSetChanged();
+        ((MainActivity) mContext).updateActionModeTitle();
     }
 
     public void deleteSongs(List<MusicFiles> selectedSongs, View v) {
@@ -118,7 +188,6 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         }
 
         if (!urisToDelete.isEmpty()) {
-            // Cancel ongoing tasks(which is performing on thread)  to avoid app crash
             for (LoadAlbumArtTask task : taskList) {
                 task.cancel(true);
             }
@@ -135,7 +204,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
                     }
                     for (Uri uri : urisToDelete) {
                         int position = positions.get(urisToDelete.indexOf(uri));
-                        deleteSongFile(position, v, uri);
+                        deleteSongFile(position, v);
                     }
 //                    Toast.makeText(mContext, selectedSongs.size()+" songs deleted successfully", Toast.LENGTH_SHORT).show();
                 }
@@ -145,7 +214,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         }
     }
 
-    private void deleteSongFile(int position, View v, Uri contentUri) {
+    private void deleteSongFile(int position, View v) {
         try {
             mFiles.remove(position);
             notifyItemRemoved(position);
@@ -164,13 +233,18 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView file_name;
-        ImageView album_art;
+        TextView file_name, file_size;
+        ImageView album_art,music_beats;
+        BarVisualizer visualizer;
+
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             file_name = itemView.findViewById(R.id.music_file_name);
             album_art = itemView.findViewById(R.id.music_img);
+            file_size = itemView.findViewById(R.id.music_file_size);
+            visualizer=itemView.findViewById(R.id.visualizer);
+//            music_beats=itemView.findViewById(R.id.music_beats);
         }
     }
 
@@ -215,13 +289,13 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     }
 
     // To set album art of the songs
-    private static byte[] getAlbumArt(String uri) throws IOException {
+    public static byte[] getAlbumArt(String uri) throws IOException {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(uri);
             return retriever.getEmbeddedPicture();
         } catch (IllegalArgumentException e) {
-            Log            .e("MusicAdapter", "Failed to set data source for MediaMetadataRetriever: " + e.getMessage());
+            Log.e("MusicAdapter", "Failed to set data source for MediaMetadataRetriever: " + e.getMessage());
             retriever.release();
             return null;
         } catch (RuntimeException e) {
@@ -231,13 +305,6 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         } finally {
             retriever.release();
         }
-    }
-
-    // This method is called when searching is performed
-    void updateSongList(ArrayList<MusicFiles> filteredMusicFiles) {
-        mFiles.clear();
-        mFiles.addAll(filteredMusicFiles);
-        notifyDataSetChanged();
     }
 }
 
