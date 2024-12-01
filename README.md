@@ -3,10 +3,12 @@
 This is a simple music player app build using JAVA. Below are some snapshots of the app in action:
 
 ### Home Screen
-![Home Screen](assets/snapshots/home_screen.png)
+
+![IMG-20241201-WA0012](https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6)
 
 ### Searching Songs
 ![Searching Songs](assets/snapshots/searching_song.png)
+
 
 ### Playing Music Without Album Art
 ![Playing Music Without Album Art](assets/snapshots/playing_music_without_album_art.png)
