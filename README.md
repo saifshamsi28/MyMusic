@@ -5,7 +5,7 @@ This is a simple music player app built using JAVA. Below are some snapshots of 
 <table>
   <tr>
     <td align="center">
-      <b style="font-size: 18px;">Home Screen</b><br><br>
+      <b style="font-size: 28px;">Home Screen</b><br><br>
       <img src="https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6" width="100" height="200"/>
     </td>
     <td align="center">
