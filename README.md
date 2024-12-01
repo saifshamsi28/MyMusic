@@ -1,4 +1,4 @@
-# Music Player <img src="https://github.com/user-attachments/assets/7c8a8742-5550-459c-8716-919466231442" width="100" height="200"/>
+# Music Player <img src="https://github.com/user-attachments/assets/7c8a8742-5550-459c-8716-919466231442" width="24" height="24"/>
 
 This is a simple music player app built using JAVA. Below are some snapshots of the app in action:
 
