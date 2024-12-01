@@ -1,24 +1,24 @@
 # Music Player
 
-This is a simple music player app built using java which is an offline music application with some extended features.
+This is a simple music player app build using Java. Below are some snapshots of the app in action:
 
 ### Home Screen
-![Home Screen](app/src/main/assets/music player res/home_screen.png)
+![Home Screen](app/src/main/assets/snapshots/home_screen.png)
 
-### Searching song
-![Searching song](app/src/main/assets/music%20player%20res/searching_song.png)
+### Searching Songs
+![Searching Songs](app/src/main/assets/snapshots/searching_song.png)
 
-### Now Playing Song (songs without Album Art)
-![PlayerActivity](app/src/main/assets/music%20player%20res/playing_music_without_album_art.png)
+### Playing Music Without Album Art
+![Playing Music Without Album Art](app/src/main/assets/snapshots/playing_music_without_album_art.png)
 
-### Now Playing Song (songs with Album Art)
-![PlayerActivity](app/src/main/assets/music%20player%20res/playing_music_with_album_art.png)
+### Playing Music With Album Art
+![Playing Music With Album Art](app/src/main/assets/snapshots/playing_music_with_album_art.png)
 
-### Collapsed Notification 
-![Notification](app/src/main/assets/music%20player%20res/collapsed_notification.png)
+### Collapsed Notification
+![Collapsed Notification](app/src/main/assets/snapshots/collapsed_notification.png)
 
-### Expanded Notification 
-![Notification](app/src/main/assets/music%20player%20res/extended_notification.png)
+### Expanded Notification
+![Expanded Notification](app/src/main/assets/snapshots/extended_notification.png)
 
-### can adjust song from notification
-![Notification](app/src/main/assets/music%20player%20res/adjusting_songs_using_notification_bar.png)
+### Adjusting Songs Using Notification Bar
+![Adjusting Songs Using Notification Bar](app/src/main/assets/snapshots/adjusting_songs_using_notification_bar.png)
