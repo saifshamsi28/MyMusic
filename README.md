@@ -3,7 +3,7 @@
 This is a simple music player app built using java which is an offline music application with some extended features.
 
 ### Home Screen
-![Home Screen](app/src/main/assets/music%20player%20res/home_screen.png)
+![Home Screen](app/src/main/assets/music player res/home_screen.png)
 
 ### Searching song
 ![Searching song](app/src/main/assets/music%20player%20res/searching_song.png)
