@@ -4,7 +4,7 @@ This is a simple music player app build using JAVA. Below are some snapshots of 
 
 ### Home Screen
 
-<img src="https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6" width="300"/>
+<img src="https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6" width="300" height="1080"/>
 
 ### Searching Songs
 ![Searching Songs](assets/snapshots/searching_song.png)
