@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="category_options">
+        <item>All</item>
+        <item>Songs</item>
+        <item>WhatsApp Voice Recordings</item>
+        <item>Call Recordings</item>
+    </string-array>
+</resources>

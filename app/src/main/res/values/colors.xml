@@ -12,4 +12,5 @@
     <color name="Teal">#3B5656</color>
     <color name="no_of_songs">#52D2D2</color>
     <color name="dark">#C1111111</color>
+    <color name="light_black">#2F111111</color>
 </resources>

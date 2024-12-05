@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="21dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardElevation="32dp"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16sp"
+        >
+        <TextView
+            android:id="@+id/song_name_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Song Name: "
+            android:textSize="16sp"
+            android:textColor="@color/black"/>
+
+        <TextView
+            android:id="@+id/song_location_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Location: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/song_artist_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Artist: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/song_duration_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Duration: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/song_size_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Size: "
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

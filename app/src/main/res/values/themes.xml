@@ -5,8 +5,8 @@
     </style>
 
     <style name="Theme.MyMusic" parent="Theme.AppCompat.Light">
-        <item name="colorPrimary">@color/GreenishBlue</item>        <!-- Sets the color of the action bar -->
-        <item name="android:actionBarStyle">@style/CustomActionBarStyle</item>   <!-- Apply custom ActionBar style -->
+        <item name="colorPrimary">@color/GreenishBlue</item>
+        <item name="titleTextColor">@color/white</item>
         <item name="android:windowBackground">@color/white</item>    <!-- Sets the background color -->
     </style>
     <style name="CustomActionModeStyle" parent="@style/Widget.AppCompat.ActionMode">

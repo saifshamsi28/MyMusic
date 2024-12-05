@@ -4,6 +4,7 @@ import static com.saif.mymusic.ApplicationClass.ACTION_NEXT;
 import static com.saif.mymusic.ApplicationClass.ACTION_PLAY;
 import static com.saif.mymusic.ApplicationClass.ACTION_PREVIOUS;
 import static com.saif.mymusic.ApplicationClass.CHANNEL_ID_2;
+import static com.saif.mymusic.MainActivity.currentPlayingPosition;
 import static com.saif.mymusic.MusicAdapter.mFiles;
 import static com.saif.mymusic.PlayerActivity.listOfSongs;
 import android.app.Notification;
@@ -43,6 +44,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public static final String LAST_MUSIC_FILE_POSITION ="last_music_file_position" ;
     public static final String LAST_MUSIC_FILE_PROGRESS ="last_music_file_progress" ;
     MediaSessionCompat mediaSessionCompat;
+    int currentPosition=0;
 
     @Override
     public void onCreate() {
@@ -122,8 +124,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
             Log.e("MusicService", "start media player called");
             mediaPlayer.start();
+            currentPlayingPosition=position;
             getAudioSessionId();
-            mFiles.get(position).setPlaying(true);
+            musicList.get(position).setPlaying(true);
             showNotification(R.drawable.pause_notification);
             updatePlaybackState(PlaybackStateCompat.STATE_PLAYING, getCurrentPosition());
         }
@@ -132,7 +135,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     void pause() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-            mFiles.get(position).setPlaying(true);
+            musicList.get(position).setPlaying(true);
             showNotification(R.drawable.play_notification);
         }
     }
@@ -140,7 +143,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     void stop() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
-            mFiles.get(position).setPlaying(true);
+            musicList.get(position).setPlaying(true);
             showNotification(R.drawable.play_notification);
         }
     }
@@ -171,6 +174,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     void createMediaPlayer(int position) {
         this.position=position;
+        currentPlayingPosition=position;
         if(musicList==null){
             musicList=mFiles;
         }
@@ -187,7 +191,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
     @Override
     public void onCompletion(MediaPlayer mp) {
-        mFiles.get(position).setPlaying(false);
+        musicList.get(position).setPlaying(false);
         if (MainActivity.loopOneButton) {
             // If loop one button is pressed, replay the same song
             createMediaPlayer(position);
@@ -208,6 +212,11 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         }
         showNotification(R.drawable.pause_notification);
 //        MainActivity.getInstance().notifyAdapterAboutPlayingSong(position);
+    }
+
+    //to update the music list after sorting
+    public void updateMusicList(ArrayList<MusicFiles> musicList) {
+        this.musicList = musicList;
     }
 
     @Override

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.MyMusic" parent="Theme.AppCompat.Light">
+        <item name="colorPrimary">@color/GreenishBlue</item>
+        <!-- to set the action bar title color -->
+        <item name="android:titleTextColor">@color/white</item>
+        <item name="android:actionBarStyle">@style/CustomActionBarStyle
+        </item>   <!-- Apply custom ActionBar style -->
+        <item name="android:windowBackground">@color/white
+        </item>    <!-- Sets the background color -->
+    </style>
+</resources>

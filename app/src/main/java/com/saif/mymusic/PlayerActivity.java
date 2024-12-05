@@ -1,16 +1,26 @@
 package com.saif.mymusic;
 
+import static com.saif.mymusic.MainActivity.REQUEST_CODE;
 import static com.saif.mymusic.MainActivity.loopOneButton;
+import static com.saif.mymusic.MainActivity.musicFiles;
 import static com.saif.mymusic.MainActivity.shuffleButton;
 import static com.saif.mymusic.MusicAdapter.mFiles;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.palette.graphics.Palette;
 
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -29,12 +39,15 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 public class PlayerActivity extends AppCompatActivity implements ControlPlayAction, ServiceConnection {
     TextView songName,durationPlayed,durationTotal,singerName;
-    ImageView album,loop,shuffle,previous,next,playPauseButton;
+    ImageView album,loop,shuffle,previous,next,playPauseButton,songInfo;
     SeekBar seekBar;
     int position;
     static ArrayList<MusicFiles>listOfSongs = new ArrayList<>();
@@ -44,6 +57,14 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
     MusicService musicService;
 //    private BarVisualizer audioVisualizer;
     int audioSessionId;
+
+    private String song_info_name = "My Song"; // Replace with actual data
+    private String songLocation = "/storage/emulated/0/Music/MySong.mp3";
+    private String songArtist = "Unknown Artist";
+    private String songAlbum = "Unknown Album";
+    private String songDuration = "3:45";
+    private String songSize = "5 MB";
+    private String dateAdded = "2023-07-01";
 
     public static PlayerActivity getInstance(){
         return instance;
@@ -55,8 +76,58 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         Intent serviceIntent = new Intent(this, MusicService.class);
         startService(serviceIntent);
         bindService(serviceIntent, this, BIND_AUTO_CREATE);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(metadataChangeReceiver, new IntentFilter("com.saif.mymusic.METADATA_CHANGED"));
     }
 
+    private final BroadcastReceiver metadataChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && intent.getAction() != null && intent.getAction().equals("com.saif.mymusic.METADATA_CHANGED")) {
+                String newTitle = intent.getStringExtra("TITLE");
+                String newArtist = intent.getStringExtra("ARTIST");
+                recreate();
+
+                // Update UI
+                songName.setText(newTitle);
+                singerName.setText(newArtist);
+                Toast.makeText(PlayerActivity.this, "Song updated successfully!", Toast.LENGTH_SHORT).show();
+
+                // Update listOfSongs if necessary
+                if (position != -1 && position < listOfSongs.size()) {
+                    listOfSongs.get(position).setTitle(newTitle);
+                    listOfSongs.get(position).setArtist(newArtist);
+                }
+            }else {
+                Toast.makeText(PlayerActivity.this, "Song update failed!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(metadataChangeReceiver);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            String newTitle = data.getStringExtra("TITLE");
+            String newArtist = data.getStringExtra("ARTIST");
+
+            songName.setText(newTitle);
+            singerName.setText(newArtist);
+            Toast.makeText(this, "Song updated successfully!", Toast.LENGTH_SHORT).show();
+            if (position != -1 && position < listOfSongs.size()) {
+                listOfSongs.get(position).setTitle(newTitle);
+                listOfSongs.get(position).setArtist(newArtist);
+            }
+        }else {
+            Toast.makeText(this, "Song update failed!", Toast.LENGTH_SHORT).show();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +143,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         durationTotal = findViewById(R.id.duration_total);
         next = findViewById(R.id.next);
         playPauseButton = findViewById(R.id.play_pause_button);
+        songInfo = findViewById(R.id.info_button);
         seekBar = findViewById(R.id.seekBar);
         instance=this;
 
@@ -108,13 +180,11 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
                 handler.postDelayed(this, 1000);
             }
         });
-        // action when play-pause button is clicked
+        // click listeners
         playPauseButton.setOnClickListener(v -> playPause());
-        //action when previous button is clicked
         previous.setOnClickListener(v -> playPrevious());
-
+        songInfo.setOnClickListener(v -> showSongMetadataDialog());
         next.setOnClickListener(v -> playNext());
-
         loop.setOnClickListener(v -> {
             shuffleButton=false;
             shuffle.setImageResource(R.drawable.shuffle_off);
@@ -143,6 +213,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
                 Toast.makeText(PlayerActivity.this, "Shuffle On", Toast.LENGTH_SHORT).show();
             }
         });
+
     }
     // to format time in minutes and seconds from milliseconds
     public String playedTimeMethod(int currentPosition){
@@ -173,6 +244,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         }
 
         if (musicService != null) {
+            musicService.updateMusicList(listOfSongs);
             handleMusicService(fromNotification, currentPosition, isPlaying);
         } else {
             Log.e("PlayerActivity", "getIntentMethod: musicService is null");
@@ -219,10 +291,19 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         byte[] art=retriever.getEmbeddedPicture();
         Bitmap bitmap;
         songName.setText(listOfSongs.get(currentPosition).getTitle());
+        song_info_name=listOfSongs.get(currentPosition).getTitle();
         singerName.setText(listOfSongs.get(currentPosition).getArtist());
+        songArtist=listOfSongs.get(currentPosition).getArtist();
 //        playPauseButton.setImageResource(R.drawable.pause);
         seekBar.setMax(musicService.getDuration());
         durationTotal.setText(playedTimeMethod(musicService.getDuration()/1000));
+        songDuration= String.valueOf(musicService.getDuration());
+        songLocation=uri.toString();
+        songSize= String.valueOf((listOfSongs.get(currentPosition).getSize()));
+        dateAdded= String.valueOf((listOfSongs.get(currentPosition).getDateAdded()));
+        Log.d("PlayerActivity", "getMetaDataOfSong,Date added: "+listOfSongs.get(currentPosition).getDateAdded());
+        Log.d("PlayerActivity", "getMetaDataOfSong,Date added(formatted): "+dateAdded);
+        songAlbum=listOfSongs.get(currentPosition).getAlbum();
         if(art!=null){
             Glide.with(this)
                     .asBitmap()
@@ -239,6 +320,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
                     GradientDrawable gradientDrawable=new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
                             new int[]{swatch.getRgb(),0x00000000});
                     playerActivityBackground.setBackground(gradientDrawable);
+                    getWindow().setStatusBarColor(swatch.getRgb());
                     songName.setTextColor(swatch.getTitleTextColor());
                     singerName.setTextColor(swatch.getTitleTextColor());
                 }
@@ -248,6 +330,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
                     GradientDrawable gradientDrawable=new GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,
                             new int[]{0xff000000,0x00000000});
                     playerActivityBackground.setBackground(gradientDrawable);
+                    getWindow().setStatusBarColor(ContextCompat.getColor(PlayerActivity.this, R.color.light_black));
                     songName.setTextColor(Color.WHITE);
                     singerName.setTextColor(Color.WHITE);
                 }
@@ -268,11 +351,13 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
                 playPauseButton.setImageResource(R.drawable.play);
                 musicService.showNotification(R.drawable.play_notification);
                 musicService.pause();
+                songName.setSelected(false);
                 if(MiniPlayerFragment.getInstance().playPauseButton!=null)
                         MiniPlayerFragment.getInstance().playPauseButton.setImageResource(R.drawable.play);
             } else {
                 playPauseButton.setImageResource(R.drawable.pause);
                 musicService.start();
+                songName.setSelected(true);
                 musicService.showNotification(R.drawable.pause_notification);
                 if(MiniPlayerFragment.getInstance().playPauseButton!=null)
                     MiniPlayerFragment.getInstance().playPauseButton.setImageResource(R.drawable.pause);
@@ -304,6 +389,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
 //        initializeMediaPlayer();//it initialize and ensures that next song will automatically play after this song completes
         musicService.createMediaPlayer(position);
         musicService.start();
+        playPauseButton.setImageResource(R.drawable.pause);
         musicService.showNotification(R.drawable.pause_notification);
         getMetaDataOfSong(uri,position);
         if(MiniPlayerFragment.getInstance().playPauseButton!=null) {
@@ -327,6 +413,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         uri = Uri.parse(listOfSongs.get(position).getPath());
         musicService.createMediaPlayer(position);
         musicService.start();
+        playPauseButton.setImageResource(R.drawable.pause);
         musicService.showNotification(R.drawable.pause_notification);
         getMetaDataOfSong(uri,position);
         if(MiniPlayerFragment.getInstance().playPauseButton!=null) {
@@ -362,4 +449,18 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         musicService=null;
     }
 
+    private void showSongMetadataDialog() {
+
+            Intent intent = new Intent(this, SongInfoActivity.class);
+            intent.putExtra("TITLE", song_info_name);
+            intent.putExtra("ARTIST", songArtist);
+            intent.putExtra("DURATION", songDuration);
+            intent.putExtra("SIZE", songSize);
+            intent.putExtra("LOCATION", songLocation);
+            intent.putExtra("ALBUM_ART_PATH", uri.toString());
+            intent.putExtra("DATE_ADDED",dateAdded);
+            intent.putExtra("ALBUM",songAlbum);
+            startActivity(intent);
+
+    }
 }

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_bg"
+    tools:context=".SongInfoActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16sp"
+            android:contentDescription="cancel button"
+            android:src="@drawable/cancel_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/GreenishBlue" />
+
+        <TextView
+            android:id="@+id/info_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16sp"
+            android:text="Song Info"
+            android:textColor="@color/black"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/cancel_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/cancel_button" />
+        <!-- Circular Album Art -->
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/song_album_art"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_marginTop="12dp"
+            android:src="@drawable/logo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/info_title" />
+
+        <!-- Song Title -->
+
+        <TextView
+            android:id="@+id/tv_title_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16sp"
+            android:text="Title:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/song_album_art" />
+
+        <EditText
+            android:id="@+id/song_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:hint="Unknown Title"
+            android:maxLines="2"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_label" />
+
+        <!-- Artist -->
+        <TextView
+            android:id="@+id/tv_artist_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Artist:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_title_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_title" />
+
+        <EditText
+            android:id="@+id/song_artist"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:hint="Unknown Artist"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_artist_label" />
+
+        <TextView
+            android:id="@+id/tv_album_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Album:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_artist_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_artist" />
+
+        <EditText
+            android:id="@+id/song_album"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:hint="Unknown Album"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_album_label" />
+
+        <!-- Other Metadata -->
+        <TextView
+            android:id="@+id/tv_duration_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Duration:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_album_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_album" />
+
+        <TextView
+            android:id="@+id/song_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:text="5:20"
+            android:padding="8dp"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_duration_label" />
+
+        <TextView
+            android:id="@+id/tv_size_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Size:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_duration_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_duration" />
+
+        <TextView
+            android:id="@+id/song_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:text="5.3 mb"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_size_label" />
+
+        <TextView
+            android:id="@+id/tv_format_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Format:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_size_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_size" />
+
+        <TextView
+            android:id="@+id/song_format"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:text=".mp3"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_format_label" />
+
+        <TextView
+            android:id="@+id/tv_date_added_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Date Added:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_format_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_format" />
+
+        <TextView
+            android:id="@+id/date_added"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:text="05/12/2024"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:padding="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_date_added_label" />
+
+        <TextView
+            android:id="@+id/location_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Location:"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/tv_date_added_label"
+            app:layout_constraintTop_toBottomOf="@+id/date_added" />
+
+        <!-- to make this text copyable -->
+        <TextView
+            android:id="@+id/song_location_field"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16sp"
+            android:layout_marginEnd="8dp"
+            android:focusable="true"
+            android:padding="8dp"
+            android:text="saif/mymusic/test.mp3"
+            android:textColor="@color/black"
+            android:textIsSelectable="true"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/location_label" />
+        <!-- Save Button -->
+        <ImageView
+            android:id="@+id/edit_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_margin="16sp"
+            android:contentDescription="save details"
+            android:elevation="16sp"
+            android:src="@drawable/edit"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/GreenishBlue" />
+
+        <ImageView
+            android:id="@+id/save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:contentDescription="save details"
+            android:src="@drawable/save_icon"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/info_title"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/info_title" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

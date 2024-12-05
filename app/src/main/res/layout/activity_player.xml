@@ -23,6 +23,17 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
+        android:id="@+id/info_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:src="@drawable/info_icon"
+        android:contentDescription="@string/info_button_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <ImageView
         android:id="@+id/album_art"
         android:layout_width="match_parent"
         android:layout_height="350dp"

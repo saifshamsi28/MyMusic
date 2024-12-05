@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,14 +31,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder> {
     private final Context mContext;
     private ContentResolver mContentResolver;
     static ArrayList<MusicFiles> mFiles;
     private boolean multiSelectModeOn = false;
-    private ArrayList<MusicFiles> selectedItems = new ArrayList<>();
-    private List<LoadAlbumArtTask> taskList = new ArrayList<>();
+    ArrayList<MusicFiles> selectedItems = new ArrayList<>();
+//    private List<LoadAlbumArtTask> taskList = new ArrayList<>();
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4); // 4 threads for background processing
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 //    static AnimationDrawable animation;
     public int playingPosition=-1;
 
@@ -57,16 +64,48 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     public void onBindViewHolder(@NonNull MusicAdapter.MyViewHolder holder, int position) {
         MusicFiles musicFile = mFiles.get(position);
         holder.file_name.setText(mFiles.get(position).getTitle());
+        if(mFiles.get(position).getArtist().contains("unknown")){
+            holder.music_artist.setText("Unknown Artist");
+        }else {
+            holder.music_artist.setText(mFiles.get(position).getArtist());
+        }
+        if(mFiles.get(position).getAlbum().contains("unknown")){
+            holder.music_lbum.setText("Unknown Album");
+        }else {
+            holder.music_lbum.setText(mFiles.get(position).getAlbum());
+        }
         holder.file_size.setText(formatMusicFileSize(mFiles.get(position).getSize()));
         //these 3 lines ,to set the moving text for BOOK Title
 //        holder.file_name.setEllipsize(TextUtils.TruncateAt.MARQUEE);
         holder.file_name.setSingleLine(true);
-//        holder.file_name.setSelected(true);
+//        task.execute();
 
-        // this will Load album art in a separate thread
-        LoadAlbumArtTask task = new LoadAlbumArtTask(holder, position);
-        taskList.add(task);
-        task.execute();
+        // Cancel any previous task for this holder
+        Glide.with(holder.itemView.getContext()).clear(holder.album_art);
+
+        // Submit a task to load album art
+        executorService.submit(() -> {
+            try {
+                byte[] albumArt = getAlbumArt(musicFile.getPath());
+                mainHandler.post(() -> {
+                    if (albumArt != null) {
+                        Glide.with(holder.itemView.getContext())
+                                .asBitmap()
+                                .load(albumArt)
+                                .into(holder.album_art);
+                    } else {
+                        Glide.with(holder.itemView.getContext())
+                                .load(R.drawable.logo)
+                                .into(holder.album_art);
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+                mainHandler.post(() -> Glide.with(holder.itemView.getContext())
+                        .load(R.drawable.logo)
+                        .into(holder.album_art));
+            }
+        });
 
         musicFile.setPlaying(false);
 
@@ -107,7 +146,6 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
             }
         });
 
-
         holder.itemView.setOnLongClickListener(v -> {
             if (!multiSelectModeOn) {
                 multiSelectModeOn = true;
@@ -116,6 +154,11 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
             toggleSelection(position);
             return true;
         });
+    }
+
+    // Clean up the executor service to prevent memory leaks
+    public void shutdownExecutor() {
+        executorService.shutdownNow();
     }
 
     public String formatMusicFileSize(long sizeInBytes) {
@@ -156,6 +199,9 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     int getSelectedItemCount() {
         return selectedItems.size();
     }
+    public MusicFiles getSelectedSong() {
+        return selectedItems.get(0);
+    }
 
     public void selectAll() {
         if (selectedItems.size() != mFiles.size()) {
@@ -188,10 +234,10 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         }
 
         if (!urisToDelete.isEmpty()) {
-            for (LoadAlbumArtTask task : taskList) {
-                task.cancel(true);
-            }
-            taskList.clear();
+//            for (LoadAlbumArtTask task : taskList) {
+//                task.cancel(true);
+//            }
+//            taskList.clear();
 
             String externalStorageState = Environment.getExternalStorageState();
             if (Environment.MEDIA_MOUNTED.equals(externalStorageState)) {
@@ -232,8 +278,16 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         return mFiles.size();
     }
 
+    public void updateMusicFiles(ArrayList<MusicFiles> newMusicFiles) {
+        mFiles = new ArrayList<>(newMusicFiles); // Replace with the new list
+//        notifyItemRangeChanged(0,mFiles.size()); // Refresh the UI
+        notifyDataSetChanged();
+    }
+
+
+
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        TextView file_name, file_size;
+        TextView file_name, file_size, music_artist, music_lbum;
         ImageView album_art,music_beats;
         BarVisualizer visualizer;
 
@@ -241,6 +295,8 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             file_name = itemView.findViewById(R.id.music_file_name);
+            music_artist = itemView.findViewById(R.id.music_artist_name);
+            music_lbum = itemView.findViewById(R.id.music_album_name);
             album_art = itemView.findViewById(R.id.music_img);
             file_size = itemView.findViewById(R.id.music_file_size);
             visualizer=itemView.findViewById(R.id.visualizer);
@@ -249,58 +305,14 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MyViewHolder
     }
 
     // AsyncTask to load album art in the background
-    private static class LoadAlbumArtTask extends AsyncTask<Void, Void, byte[]> {
-        private MyViewHolder holder;
-        private int position;
-
-        LoadAlbumArtTask(MyViewHolder holder, int position) {
-            this.holder = holder;
-            this.position = position;
-        }
-
-        @Override
-        protected byte[] doInBackground(Void... voids) {
-            try {
-                File file = new File(mFiles.get(position).getPath());
-                if (file.exists()) {
-                    return getAlbumArt(mFiles.get(position).getPath());
-                } else {
-                    return null;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(byte[] bytes) {
-            if (bytes != null) {
-                Glide.with(holder.itemView.getContext())
-                        .asBitmap()
-                        .load(bytes)
-                        .into(holder.album_art);
-            } else {
-                Glide.with(holder.itemView.getContext())
-                        .load(R.drawable.logo)
-                        .into(holder.album_art);
-            }
-        }
-    }
-
-    // To set album art of the songs
+    // Album art retrieval method
     public static byte[] getAlbumArt(String uri) throws IOException {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             retriever.setDataSource(uri);
             return retriever.getEmbeddedPicture();
-        } catch (IllegalArgumentException e) {
-            Log.e("MusicAdapter", "Failed to set data source for MediaMetadataRetriever: " + e.getMessage());
-            retriever.release();
-            return null;
-        } catch (RuntimeException e) {
-            Log.e("MusicAdapter", "Runtime exception in MediaMetadataRetriever: " + e.getMessage());
-            retriever.release();
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         } finally {
             retriever.release();

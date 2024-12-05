@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:background="#111">
 
-    <ImageView
+    <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/music_img"
         android:layout_width="60dp"
         android:layout_height="60dp"
@@ -18,22 +18,70 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.5" />
 
-    <TextView
-        android:id="@+id/music_file_name"
+    <LinearLayout
+        android:id="@+id/info_linear_layout"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:maxLines="1"
-        android:text="File name faef fwe wf feffaeaefaedwf ffefge"
-        android:textColor="@color/white"
-        android:textSize="20dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="5sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/music_file_size"
-        app:layout_constraintStart_toEndOf="@+id/music_img"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5" />
+        app:layout_constraintEnd_toStartOf="@id/music_file_size"
+        app:layout_constraintStart_toEndOf="@id/music_img"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/music_file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textStyle="bold"
+            android:text="File name faef fwe wf feffaeaefaedwf ffefge"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <!-- horizontal linear layout for artist and album name -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            >
+            <ImageView
+                android:layout_width="16sp"
+                android:layout_height="16sp"
+                android:src="@drawable/artist_album_icon"
+                />
+            <TextView
+                android:id="@+id/music_artist_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5sp"
+                android:textAlignment="viewStart"
+                android:text="Artist name"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+            <View
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                android:layout_marginStart="3dp"
+                android:layout_marginEnd="3dp"
+                android:layout_gravity="center_vertical"
+                android:background="@drawable/artist_album_separator"
+                />
+            <TextView
+                android:id="@+id/music_album_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:padding="5dp"
+                android:layout_weight="1"
+                android:textAlignment="viewStart"
+                android:text="Album name"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/music_file_size"
@@ -46,9 +94,9 @@
         android:text="2.4mb"
         android:textColor="@color/white"
         android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.5" />
 
     <com.chibde.visualizer.BarVisualizer
@@ -57,13 +105,12 @@
         android:layout_height="55dp"
         android:layout_gravity="center_vertical"
         android:layout_marginEnd="8dp"
+        android:background="@color/Teal"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:background="@color/Teal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
-        />
+        app:layout_constraintVertical_bias="0.5" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

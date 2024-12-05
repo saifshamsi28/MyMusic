@@ -5,13 +5,16 @@ import static com.saif.mymusic.MainActivity.LAST_MUSIC_ARTIST;
 import static com.saif.mymusic.MainActivity.LAST_MUSIC_NAME;
 import static com.saif.mymusic.MainActivity.PATH_TO_MINI_PLAYER;
 import static com.saif.mymusic.MainActivity.SHOW_MINI_PLAYER;
+import static com.saif.mymusic.MainActivity.currentPlayingPosition;
 import static com.saif.mymusic.MainActivity.musicFiles;
 import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_POSITION;
 import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_PROGRESS;
 import static com.saif.mymusic.SharedPreferencesManager.getLastPlayedMusic;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -20,6 +23,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.os.IBinder;
 import android.text.TextUtils;
@@ -51,6 +55,26 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection,Co
     public MiniPlayerFragment() {
         // Required empty public constructor
     }
+
+    private final BroadcastReceiver metadataChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && intent.getAction() != null && intent.getAction().equals("com.saif.mymusic.METADATA_CHANGED")) {
+                String newTitle = intent.getStringExtra("TITLE");
+                String newArtist = intent.getStringExtra("ARTIST");
+
+                // Update UI
+                songName.setText(newTitle);
+                artistName.setText(newArtist);
+
+                // Update listOfSongs if necessary
+                if (currentPlayingPosition != -1 && musicService != null && musicService.position != -1 && currentPlayingPosition < musicFiles.size()) {
+                    musicFiles.get(musicService.position).setTitle(newTitle);
+                    musicFiles.get(musicService.position).setArtist(newArtist);
+                }
+            }
+        }
+    };
 
 
     @Override
@@ -192,6 +216,7 @@ public class MiniPlayerFragment extends Fragment implements ServiceConnection,Co
     @Override
     public void onResume() {
         super.onResume();
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(metadataChangeReceiver);
         if(getContext()!=null) {
                 Intent intent = new Intent(getContext(), MusicService.class);
                 intent.putExtra("servicePosition",LAST_MUSIC_FILE_POSITION);
