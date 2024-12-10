@@ -37,8 +37,12 @@ This is a simple music player app built using JAVA. Below are some snapshots of 
       <img src="https://github.com/user-attachments/assets/03b6a4cd-fbd3-46e0-905c-d994c2426560" width="100" height="200"/>
     </td>
     <td align="center">
-      <b style="font-size: 18px;"Showing Full details of a music file</b><br><br>
+      <b style="font-size: 18px;">Showing Full details of a music file</b><br><br>
       <img src="https://github.com/user-attachments/assets/2698f25a-5fe4-4575-9bd1-ebc395fbf0b0" width="100" height="200"/>
+    </td>
+    <td align="center">
+      <b style="font-size: 18px;">Can edit metadat(Title,Artist,Album)</b><br><br>
+      <img src="https://github.com/user-attachments/assets/446a71ca-4464-4f35-aa2d-782c3d510c7f" width="100" height="200"/>
     </td>
   </tr>
 </table>
