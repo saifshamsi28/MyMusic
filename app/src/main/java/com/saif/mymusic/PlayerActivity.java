@@ -2,7 +2,6 @@ package com.saif.mymusic;
 
 import static com.saif.mymusic.MainActivity.REQUEST_CODE;
 import static com.saif.mymusic.MainActivity.loopOneButton;
-import static com.saif.mymusic.MainActivity.musicFiles;
 import static com.saif.mymusic.MainActivity.shuffleButton;
 import static com.saif.mymusic.MusicAdapter.mFiles;
 
@@ -12,15 +11,12 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.palette.graphics.Palette;
-
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -36,13 +32,8 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.bumptech.glide.Glide;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Random;
 
 public class PlayerActivity extends AppCompatActivity implements ControlPlayAction, ServiceConnection {
@@ -65,6 +56,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
     private String songDuration = "3:45";
     private String songSize = "5 MB";
     private String dateAdded = "2023-07-01";
+    private String dateModified = "2023-07-01";
 
     public static PlayerActivity getInstance(){
         return instance;
@@ -301,6 +293,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
         songLocation=uri.toString();
         songSize= String.valueOf((listOfSongs.get(currentPosition).getSize()));
         dateAdded= String.valueOf((listOfSongs.get(currentPosition).getDateAdded()));
+        dateModified= String.valueOf((listOfSongs.get(currentPosition).getDateModified()));
         Log.d("PlayerActivity", "getMetaDataOfSong,Date added: "+listOfSongs.get(currentPosition).getDateAdded());
         Log.d("PlayerActivity", "getMetaDataOfSong,Date added(formatted): "+dateAdded);
         songAlbum=listOfSongs.get(currentPosition).getAlbum();
@@ -460,6 +453,7 @@ public class PlayerActivity extends AppCompatActivity implements ControlPlayActi
             intent.putExtra("ALBUM_ART_PATH", uri.toString());
             intent.putExtra("DATE_ADDED",dateAdded);
             intent.putExtra("ALBUM",songAlbum);
+            intent.putExtra("DATE_MODIFIED",dateModified);
             startActivity(intent);
 
     }

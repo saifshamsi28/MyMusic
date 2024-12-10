@@ -7,8 +7,6 @@ import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_POSITION;
 import static com.saif.mymusic.MusicService.LAST_MUSIC_FILE_PROGRESS;
 import static com.saif.mymusic.MusicService.LAST_PLAYED_MUSIC;
 import static com.saif.mymusic.MyMusicPlayerPermissions.REQUEST_MEDIA_PERMISSION;
-import static com.saif.mymusic.PlayerActivity.listOfSongs;
-
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -72,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private String currentSortOrder ;
     private String currentCategory ;
     private DividerItemDecoration dividerItemDecoration;
+    private boolean isUserAction = false;
 
     private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
 
@@ -169,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             String songLocation = selectedSong.getPath();
             String albumArtPath = selectedSong.getPath(); // Assuming it's a URI
             String dateAdded = String.valueOf(selectedSong.getDateAdded());
+            String dateModified = String.valueOf(selectedSong.getDateModified());
             String songAlbum = selectedSong.getAlbum();
 
             // Create the intent and pass the metadata
@@ -180,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             intent.putExtra("LOCATION", songLocation);
             intent.putExtra("ALBUM_ART_PATH", albumArtPath);
             intent.putExtra("DATE_ADDED", dateAdded);
+            intent.putExtra("DATE_MODIFIED", dateModified);
             intent.putExtra("ALBUM", songAlbum);
             musicAdapter.selectedItems.clear();
             // Start the SongInfoActivity
@@ -215,8 +216,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         currentCategory = preferences.getString("category", "All");
         requestPermissions();
 
+        isUserAction = false;
         categorySpinner.setOnItemSelectedListener(this);
         setSpinnerSelection(currentCategory);
+        isUserAction = true;
     }
 
     private void deleteSelectedItems() {
@@ -384,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             currentCategory="All";
             categorySpinner.setSelection(0);
             setupMusicFiles(currentSortOrder);
-            Toast.makeText(this, "Sorting by Date", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Sorted by Date", Toast.LENGTH_SHORT).show();
         } else if (item.getItemId() == R.id.sort_by_size) {
             currentSortOrder = "sortBySize";
             editor.putString("sorting", currentSortOrder);
@@ -392,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             currentCategory="All";
             categorySpinner.setSelection(0);
             setupMusicFiles(currentSortOrder);
-            Toast.makeText(this, "Sorting by Size", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Sorted by Size", Toast.LENGTH_SHORT).show();
         }else if(item.getItemId()==R.id.refresh_button){
             //refresh the current list to reflect any changes recently made
             MediaScannerConnection.scanFile(this, new String[]{currentCategory}, null, null);
@@ -530,6 +533,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         editor.apply();
         // Filter the music files by the selected category
         filterMusicFilesByCategory(category);
+
+        if (isUserAction) {
+            Toast.makeText(this, "Filtered by: " + category, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -586,6 +593,5 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 noOfSongs.setText(filteredList.size()+" songs");
         }
         musicAdapter.updateMusicFiles(filteredList);
-        setupRecyclerView();
     }
 }

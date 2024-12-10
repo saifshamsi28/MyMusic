@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_bg"
     tools:context=".SongInfoActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -20,8 +19,7 @@
             android:contentDescription="cancel button"
             android:src="@drawable/cancel_icon"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/GreenishBlue" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/info_title"
@@ -57,9 +55,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="16sp"
-            android:text="Title:"
+            android:text="Title"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
@@ -71,24 +70,40 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16sp"
             android:layout_marginEnd="8dp"
+            android:padding="8dp"
             android:hint="Unknown Title"
             android:maxLines="2"
-            android:textColor="@color/black"
+            android:textColor="@color/info_text_color"
+            android:background="@android:color/transparent"
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_title_label" />
 
+        <View
+            android:id="@+id/border_below_title"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            app:layout_constraintBottom_toTopOf="@id/tv_artist_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/song_title" />
         <!-- Artist -->
         <TextView
             android:id="@+id/tv_artist_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Artist:"
+            android:text="Artist"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_title_label"
             app:layout_constraintTop_toBottomOf="@+id/song_title" />
 
@@ -98,22 +113,38 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16sp"
             android:layout_marginEnd="8dp"
+            android:padding="8dp"
             android:hint="Unknown Artist"
-            android:textColor="@color/black"
+            android:background="@android:color/transparent"
             android:textSize="16sp"
+            android:textColor="@color/info_text_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_artist_label" />
 
+        <View
+            android:id="@+id/border_below_artist"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_album_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/song_artist" />
         <TextView
             android:id="@+id/tv_album_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Album:"
+            android:text="Album"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_artist_label"
             app:layout_constraintTop_toBottomOf="@+id/song_artist" />
 
@@ -123,23 +154,39 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16sp"
             android:layout_marginEnd="8dp"
+            android:padding="8dp"
             android:hint="Unknown Album"
-            android:textColor="@color/black"
             android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            android:background="@android:color/transparent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_album_label" />
 
+        <View
+            android:id="@+id/border_below_album"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_duration_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/song_album" />
         <!-- Other Metadata -->
         <TextView
             android:id="@+id/tv_duration_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Duration:"
+            android:text="Duration"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_album_label"
             app:layout_constraintTop_toBottomOf="@+id/song_album" />
 
@@ -147,24 +194,34 @@
             android:id="@+id/song_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16sp"
-            android:layout_marginEnd="8dp"
-            android:text="5:20"
             android:padding="8dp"
-            android:textColor="@color/black"
+            android:text="5:20"
             android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            app:layout_constraintStart_toStartOf="@+id/tv_duration_label"
+            app:layout_constraintTop_toBottomOf="@+id/tv_duration_label" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_size_label"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_duration_label" />
-
+            app:layout_constraintTop_toBottomOf="@id/song_duration" />
         <TextView
             android:id="@+id/tv_size_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Size:"
+            android:text="Size"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_duration_label"
             app:layout_constraintTop_toBottomOf="@+id/song_duration" />
 
@@ -172,23 +229,34 @@
             android:id="@+id/song_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16sp"
-            android:layout_marginEnd="8dp"
-            android:text="5.3 mb"
-            android:textColor="@color/black"
-            android:textSize="16sp"
             android:padding="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_size_label" />
+            android:text="5.3 mb"
+            android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            app:layout_constraintStart_toStartOf="@+id/tv_size_label"
+            app:layout_constraintTop_toBottomOf="@+id/tv_size_label" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_format_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/song_size" />
         <TextView
             android:id="@+id/tv_format_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Format:"
+            android:text="Format"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_size_label"
             app:layout_constraintTop_toBottomOf="@+id/song_size" />
 
@@ -196,47 +264,105 @@
             android:id="@+id/song_format"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16sp"
-            android:layout_marginEnd="8dp"
-            android:text=".mp3"
-            android:textColor="@color/black"
-            android:textSize="16sp"
             android:padding="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_format_label" />
+            android:text=".mp3"
+            android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            app:layout_constraintStart_toStartOf="@+id/tv_format_label"
+            app:layout_constraintTop_toBottomOf="@+id/tv_format_label" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_date_modified_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/song_format" />
+
+        <TextView
+            android:id="@+id/tv_date_modified_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16sp"
+            android:text="Date Modified"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="@+id/tv_format_label"
+            app:layout_constraintTop_toBottomOf="@+id/song_format" />
+
+        <TextView
+            android:id="@+id/date_modified"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="05/12/2024"
+            android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            app:layout_constraintStart_toStartOf="@+id/tv_date_modified_label"
+            app:layout_constraintTop_toBottomOf="@+id/tv_date_modified_label" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/tv_date_added_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date_modified" />
         <TextView
             android:id="@+id/tv_date_added_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Date Added:"
+            android:text="Date Added"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/tv_format_label"
-            app:layout_constraintTop_toBottomOf="@+id/song_format" />
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="@+id/tv_date_modified_label"
+            app:layout_constraintTop_toBottomOf="@+id/date_modified" />
 
         <TextView
             android:id="@+id/date_added"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16sp"
-            android:layout_marginEnd="8dp"
-            android:text="05/12/2024"
-            android:textColor="@color/black"
-            android:textSize="16sp"
             android:padding="8dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_date_added_label" />
+            android:text="05/12/2024"
+            android:textSize="16sp"
+            android:textColor="@color/info_text_color"
+            app:layout_constraintStart_toStartOf="@+id/tv_date_added_label"
+            app:layout_constraintTop_toBottomOf="@+id/tv_date_added_label" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/info_divider"
+            android:backgroundTint="@color/info_divider"
+            android:layout_marginStart="8sp"
+            android:layout_marginEnd="8sp"
+            app:layout_constraintBottom_toTopOf="@id/location_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/date_added" />
         <TextView
             android:id="@+id/location_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16sp"
-            android:text="Location:"
+            android:text="File Path"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintStart_toStartOf="@+id/tv_date_added_label"
             app:layout_constraintTop_toBottomOf="@+id/date_added" />
 
@@ -250,9 +376,9 @@
             android:focusable="true"
             android:padding="8dp"
             android:text="saif/mymusic/test.mp3"
-            android:textColor="@color/black"
             android:textIsSelectable="true"
             android:textSize="16sp"
+            android:textColor="@color/info_text_color"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -268,8 +394,7 @@
             android:elevation="16sp"
             android:src="@drawable/edit"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/GreenishBlue" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/save_button"

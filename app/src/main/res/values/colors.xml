@@ -12,5 +12,8 @@
     <color name="Teal">#3B5656</color>
     <color name="no_of_songs">#52D2D2</color>
     <color name="dark">#C1111111</color>
+    <color name="red">#C1F06F6F</color>
+    <color name="info_text_color">#B2000000</color>
     <color name="light_black">#2F111111</color>
+    <color name="info_divider">#AEE6C8C8</color>
 </resources>

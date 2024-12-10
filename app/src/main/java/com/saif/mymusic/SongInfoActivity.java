@@ -5,6 +5,7 @@ import static com.saif.mymusic.MusicAdapter.getAlbumArt;
 import android.app.PendingIntent;
 import android.app.RecoverableSecurityException;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -50,12 +51,13 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class SongInfoActivity extends AppCompatActivity {
     private EditText songTitle, songArtist,songAlbum;
-    private TextView songDuration, songSize, songLocation, songFormat,songAddedDate,infoTitle;
+    private TextView songDuration, songSize, songLocation, songFormat,songModifiedDate,songAddedDate,infoTitle;
     private CircleImageView songAlbumArt;
     private String title, artist, duration, albumArtPath,albumName, location;
-    private long size,dateAdded;
+    private long size,dateAdded,dateModified;
     private ImageView editButton, saveButton,cancelButton;
     private MyMusicPermissions myMusicPermissions;
+    private View borderBelowTitle,borderBelowArtist,borderBelowAlbum;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +80,11 @@ public class SongInfoActivity extends AppCompatActivity {
         songFormat = findViewById(R.id.song_format);
         cancelButton = findViewById(R.id.cancel_button);
         infoTitle = findViewById(R.id.info_title);
+        songModifiedDate = findViewById(R.id.date_modified);
         songAddedDate = findViewById(R.id.date_added);
+        borderBelowTitle = findViewById(R.id.border_below_title);
+        borderBelowArtist = findViewById(R.id.border_below_artist);
+        borderBelowAlbum = findViewById(R.id.border_below_album);
 
         // Get data from intent
         Intent intent = getIntent();
@@ -89,6 +95,7 @@ public class SongInfoActivity extends AppCompatActivity {
         location = intent.getStringExtra("LOCATION");
         albumArtPath = intent.getStringExtra("ALBUM_ART_PATH");
         dateAdded = Long.parseLong(intent.getStringExtra("DATE_ADDED"));
+        dateModified = Long.parseLong(intent.getStringExtra("DATE_MODIFIED"));
         albumName = intent.getStringExtra("ALBUM");
         myMusicPermissions = new MyMusicPermissions();
 
@@ -114,6 +121,7 @@ public class SongInfoActivity extends AppCompatActivity {
         songSize.setText(formatMusicFileSize(size));
         songLocation.setText(location);
         songAddedDate.setText(formatedDate(dateAdded));
+        songModifiedDate.setText(formatedDate(dateModified));
 
         if (albumArtPath != null) {
             try {
@@ -214,12 +222,28 @@ public class SongInfoActivity extends AppCompatActivity {
             songTitle.setLines(2);
             songTitle.setSelection(0);
             songTitle.setEllipsize(TextUtils.TruncateAt.END);
-            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
+
+            songTitle.setBackgroundResource(android.R.color.transparent);
+            songArtist.setBackgroundResource(android.R.color.transparent);
+            songAlbum.setBackgroundResource(android.R.color.transparent);
+            //set padding to 16 dp
+            songTitle.setPadding(16, 16, 16, 16);
+            songArtist.setPadding(16, 16, 16, 16);
+            songAlbum.setPadding(16, 16, 16, 16);
+
+            //show the borders
+            borderBelowTitle.setVisibility(View.VISIBLE);
+            borderBelowArtist.setVisibility(View.VISIBLE);
+            borderBelowAlbum.setVisibility(View.VISIBLE);
+
+
             //show title bar
-            if(getSupportActionBar()!=null)
+            if(getSupportActionBar()!=null) {
                 getSupportActionBar().show();
+                getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.GreenishBlue));
+            }
             else
-                Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                infoTitle.setVisibility(View.VISIBLE);
         }else {
             songTitle.setEnabled(true);
             songArtist.setEnabled(true);
@@ -236,21 +260,30 @@ public class SongInfoActivity extends AppCompatActivity {
             saveButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
             infoTitle.setVisibility(View.VISIBLE);
-            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
             //hide title bar
-            if(getSupportActionBar()!=null)
+            if(getSupportActionBar()!=null) {
                 getSupportActionBar().hide();
-            else
-                Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
-            editButton.setVisibility(View.GONE);
+                getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
+            }else
+                infoTitle.setVisibility(View.GONE);
 
-            // Enable multiline editing, focus, and open keyboard
+            songTitle.setBackgroundResource(com.google.android.material.R.drawable.abc_textfield_default_mtrl_alpha);
+            songArtist.setBackgroundResource(com.google.android.material.R.drawable.abc_textfield_default_mtrl_alpha);
+            songAlbum.setBackgroundResource(com.google.android.material.R.drawable.abc_textfield_default_mtrl_alpha);
+
+            //hide the borders
+            borderBelowTitle.setVisibility(View.GONE);
+            borderBelowArtist.setVisibility(View.GONE);
+            borderBelowAlbum.setVisibility(View.GONE);
+
+
+            editButton.setVisibility(View.GONE);
             songTitle.setSingleLine(false);
             songTitle.setMaxLines(Integer.MAX_VALUE);
             songTitle.setEllipsize(null);
             songTitle.setSelection(songTitle.getText().length());
             songTitle.requestFocus();
-            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         }
     }
 
@@ -276,6 +309,13 @@ public class SongInfoActivity extends AppCompatActivity {
                         outputStream.write(buffer, 0, length);
                     }
                     Toast.makeText(this, "Metadata updated successfully!", Toast.LENGTH_SHORT).show();
+                    // Update Date Modified
+                    long currentTime = System.currentTimeMillis();
+                    String currentDateTime = formatedDate(currentTime/1000);
+                    songModifiedDate.setText(currentDateTime);
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.Audio.Media.DATE_MODIFIED, currentTime / 1000L); // Unix timestamp in seconds
+                    getContentResolver().update(fileUri, values, null, null);
                     enableEditing(false);
                     sendBroadcastToUpdateUi(newTitle,newArtist);
                     sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).setData(fileUri));
@@ -382,24 +422,26 @@ public class SongInfoActivity extends AppCompatActivity {
         }
     }
 
-    public String formatSongDuration(int currentPosition){
-        currentPosition/=1000; //to get time in seconds
-        String seconds=String.valueOf(currentPosition % 60);
-        String minutes=String.valueOf(currentPosition / 60);
-        String totalOut = minutes + ":" + seconds;
-        String totalNew = minutes + ":0" + seconds;
-        if(seconds.length()==1){
-            return totalNew;
-        }
-        return totalOut;
+    public String formatSongDuration(int totalDuration) {
+        totalDuration /= 1000; // Convert milliseconds to seconds
+        int seconds = totalDuration % 60; // Get remaining seconds
+        int minutes = totalDuration / 60; // Get minutes
+
+        // Format minutes and seconds to always have 2 digits
+        String formattedDuration = String.format("%02d:%02d", minutes, seconds);
+        return formattedDuration;
     }
 
-    private String formatedDate(long dateAdded) {
-        dateAdded*=1000L; //to make date in milliseconds
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        Date date = new Date(dateAdded);
+
+
+    private String formatedDate(long timestamp) {
+        // Convert timestamp from seconds to milliseconds
+        timestamp *= 1000L;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault());
+        Date date = new Date(timestamp);
         return sdf.format(date);
     }
+
 
 }
 
