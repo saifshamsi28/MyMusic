@@ -6,11 +6,11 @@ This is a simple music player app built using JAVA. Below are some snapshots of 
   <tr>
     <td align="center">
       <b style="font-size: 28px;">Home Screen</b><br><br>
-      <img src="https://github.com/user-attachments/assets/3989b8b6-3e7a-4a44-9bbb-3b72e18848f6" width="100" height="200"/>
+      <img src="https://github.com/user-attachments/assets/9e4b8993-8215-4b51-8b27-b469559554e9" width="100" height="200"/>
     </td>
     <td align="center">
       <b style="font-size: 18px;">Searching Songs</b><br><br>
-      <img src="https://github.com/user-attachments/assets/d388c67a-b1e3-4519-a921-b060b18b235e" width="100" height="200"/>
+      <img src="https://github.com/user-attachments/assets/858cf09a-3683-4ad2-a84e-20dc6ee5b68c" width="100" height="200"/>
     </td>
     <td align="center">
       <b style="font-size: 18px;">Playing Music Without Album Art</b><br><br>
@@ -46,5 +46,3 @@ This is a simple music player app built using JAVA. Below are some snapshots of 
     </td>
   </tr>
 </table>
-
-
